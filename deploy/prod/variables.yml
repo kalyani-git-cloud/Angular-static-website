@@ -1,2 +1,6 @@
-storageAccount: angularprodstorage001
-environmentName: prod
+variables:
+- name: storageAccount
+  value: angularprodstorage001
+
+- name: environmentName
+  value: prod

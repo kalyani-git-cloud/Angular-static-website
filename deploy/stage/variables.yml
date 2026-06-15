@@ -1,2 +1,6 @@
-storageAccount: angularstagestorage001
-environmentName: stage
+variables:
+- name: storageAccount
+  value: angularstagestorage001
+
+- name: environmentName
+  value: stage

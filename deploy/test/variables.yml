@@ -1,2 +1,6 @@
-storageAccount: angularteststorage001
-environmentName: test
+variables:
+- name: storageAccount
+  value: angularteststorage001
+
+- name: environmentName
+  value: test
