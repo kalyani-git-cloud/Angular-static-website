@@ -1,19 +1,10 @@
 trigger: none
 
-resources:
-  pipelines:
-  - pipeline: angularBuild
-    source: angular-static-website
-    trigger: false
-
 stages:
 
-# ==========================
-# DEV
-# ==========================
 - stage: DEV
   variables:
-  - template: deploy/dev/variables.yml
+    storageAccount: angulardevstorage001
 
   jobs:
   - deployment: DeployDev
@@ -24,30 +15,13 @@ stages:
         deploy:
           steps:
 
-          - download: angularBuild
-            artifact: AngularBuild
+          - script: |
+              echo "Deploying to DEV"
+              echo "$(storageAccount)"
+            displayName: 'Test DEV'
 
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: 'Azure-StaticWebsite-SC'
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                az storage blob upload-batch \
-                  --account-name $(storageAccount) \
-                  --destination '$web' \
-                  --source $(Pipeline.Workspace)/angularBuild/AngularBuild \
-                  --overwrite \
-                  --auth-mode login
-
-# ==========================
-# TEST
-# ==========================
 - stage: TEST
   dependsOn: DEV
-
-  variables:
-  - template: deploy/test/variables.yml
 
   jobs:
   - deployment: DeployTest
@@ -58,30 +32,10 @@ stages:
         deploy:
           steps:
 
-          - download: angularBuild
-            artifact: AngularBuild
+          - script: echo "Deploying to TEST"
 
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: 'Azure-StaticWebsite-SC'
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                az storage blob upload-batch \
-                  --account-name $(storageAccount) \
-                  --destination '$web' \
-                  --source $(Pipeline.Workspace)/angularBuild/AngularBuild \
-                  --overwrite \
-                  --auth-mode login
-
-# ==========================
-# STAGE
-# ==========================
 - stage: STAGE
   dependsOn: TEST
-
-  variables:
-  - template: deploy/stage/variables.yml
 
   jobs:
   - deployment: DeployStage
@@ -92,30 +46,10 @@ stages:
         deploy:
           steps:
 
-          - download: angularBuild
-            artifact: AngularBuild
+          - script: echo "Deploying to STAGE"
 
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: 'Azure-StaticWebsite-SC'
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                az storage blob upload-batch \
-                  --account-name $(storageAccount) \
-                  --destination '$web' \
-                  --source $(Pipeline.Workspace)/angularBuild/AngularBuild \
-                  --overwrite \
-                  --auth-mode login
-
-# ==========================
-# PROD
-# ==========================
 - stage: PROD
   dependsOn: STAGE
-
-  variables:
-  - template: deploy/prod/variables.yml
 
   jobs:
   - deployment: DeployProd
@@ -126,18 +60,4 @@ stages:
         deploy:
           steps:
 
-          - download: angularBuild
-            artifact: AngularBuild
-
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: 'Azure-StaticWebsite-SC'
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                az storage blob upload-batch \
-                  --account-name $(storageAccount) \
-                  --destination '$web' \
-                  --source $(Pipeline.Workspace)/angularBuild/AngularBuild \
-                  --overwrite \
-                  --auth-mode login
+          - script: echo "Deploying to PROD"
