@@ -1,0 +1,8 @@
+trigger: none
+
+stages:
+- stage: DEV
+  jobs:
+  - job: Placeholder
+    steps:
+    - script: echo "Release Pipeline Coming Next"

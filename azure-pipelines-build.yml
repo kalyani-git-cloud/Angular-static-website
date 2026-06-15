@@ -1,0 +1,45 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+
+# Install Node.js
+- task: UseNode@1
+  inputs:
+    version: '24.x'
+  displayName: 'Use Node.js 24'
+
+# Verify versions
+- script: |
+    node -v
+    npm -v
+  displayName: 'Verify Node and NPM'
+
+# Install dependencies
+- script: npm install
+  displayName: 'Install Dependencies'
+
+# Install Angular CLI
+- script: npm install -g @angular/cli
+  displayName: 'Install Angular CLI'
+
+# Build Angular Application
+- script: ng build --configuration production
+  displayName: 'Build Angular Application'
+
+# Verify build output
+- script: |
+    echo "Listing Build Output"
+    ls -R dist
+  displayName: 'Verify Build Output'
+
+# Publish Artifact
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Angular Artifact'
+  inputs:
+    targetPath: 'dist/hello-world-app/browser'
+    artifact: 'AngularBuild'
+    publishLocation: 'pipeline'
