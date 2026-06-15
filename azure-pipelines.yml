@@ -10,10 +10,10 @@ variables:
 
 steps:
 
-- task: NodeTool@0
+- task: UseNode@1
   inputs:
-    versionSpec: '20.x'
-  displayName: 'Install Node.js'
+    version: '24.x'
+  displayName: 'Use Node.js 24'
 
 - script: |
     npm install
