@@ -4,29 +4,29 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  storageAccountName: 'angularwebstorage001'
-  azureSubscription: 'Azure-StaticWebsite-SC'
-
 steps:
 
 - task: UseNode@1
   inputs:
     version: '24.x'
-  displayName: 'Use Node.js 24'
+  displayName: 'Use Node.js'
 
-- script: |
-    npm install
+- script: npm install
   displayName: 'Install Dependencies'
 
-- script: |
-    npm install -g @angular/cli
+- script: npm install -g @angular/cli
   displayName: 'Install Angular CLI'
 
-- script: |
-    ng build --configuration production
+- script: ng build --configuration production
   displayName: 'Build Angular Application'
 
+# ADD THIS STEP HERE
+- script: |
+    echo "Listing dist folder"
+    ls -R dist
+  displayName: 'Verify Build Output'
+
+# THEN UPLOAD
 - task: AzureCLI@2
   displayName: 'Upload Files to Static Website'
   inputs:
@@ -35,7 +35,8 @@ steps:
     scriptLocation: inlineScript
     inlineScript: |
       az storage blob upload-batch \
-        --account-name angularwebstorage001 \
+        --account-name 'angularwebstorage001' \
         --destination '$web' \
-        --source dist/hello-world-app/browser \
-        --overwrite
+        --source dist/hello-world-app \
+        --overwrite \
+        --auth-mode login
