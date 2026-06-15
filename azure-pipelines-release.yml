@@ -1,8 +1,143 @@
 trigger: none
 
+resources:
+  pipelines:
+  - pipeline: angularBuild
+    source: angular-static-website
+    trigger: false
+
 stages:
+
+# ==========================
+# DEV
+# ==========================
 - stage: DEV
+  variables:
+  - template: deploy/dev/variables.yml
+
   jobs:
-  - job: Placeholder
-    steps:
-    - script: echo "Release Pipeline Coming Next"
+  - deployment: DeployDev
+    environment: dev
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - download: angularBuild
+            artifact: AngularBuild
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Azure-StaticWebsite-SC'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az storage blob upload-batch \
+                  --account-name $(storageAccount) \
+                  --destination '$web' \
+                  --source $(Pipeline.Workspace)/angularBuild/AngularBuild \
+                  --overwrite \
+                  --auth-mode login
+
+# ==========================
+# TEST
+# ==========================
+- stage: TEST
+  dependsOn: DEV
+
+  variables:
+  - template: deploy/test/variables.yml
+
+  jobs:
+  - deployment: DeployTest
+    environment: test
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - download: angularBuild
+            artifact: AngularBuild
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Azure-StaticWebsite-SC'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az storage blob upload-batch \
+                  --account-name $(storageAccount) \
+                  --destination '$web' \
+                  --source $(Pipeline.Workspace)/angularBuild/AngularBuild \
+                  --overwrite \
+                  --auth-mode login
+
+# ==========================
+# STAGE
+# ==========================
+- stage: STAGE
+  dependsOn: TEST
+
+  variables:
+  - template: deploy/stage/variables.yml
+
+  jobs:
+  - deployment: DeployStage
+    environment: stage
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - download: angularBuild
+            artifact: AngularBuild
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Azure-StaticWebsite-SC'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az storage blob upload-batch \
+                  --account-name $(storageAccount) \
+                  --destination '$web' \
+                  --source $(Pipeline.Workspace)/angularBuild/AngularBuild \
+                  --overwrite \
+                  --auth-mode login
+
+# ==========================
+# PROD
+# ==========================
+- stage: PROD
+  dependsOn: STAGE
+
+  variables:
+  - template: deploy/prod/variables.yml
+
+  jobs:
+  - deployment: DeployProd
+    environment: prod
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - download: angularBuild
+            artifact: AngularBuild
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Azure-StaticWebsite-SC'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az storage blob upload-batch \
+                  --account-name $(storageAccount) \
+                  --destination '$web' \
+                  --source $(Pipeline.Workspace)/angularBuild/AngularBuild \
+                  --overwrite \
+                  --auth-mode login
