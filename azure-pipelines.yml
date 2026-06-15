@@ -1,0 +1,41 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  storageAccountName: 'angularwebstorage001'
+  azureSubscription: 'Azure-StaticWebsite-SC'
+
+steps:
+
+- task: NodeTool@0
+  inputs:
+    versionSpec: '20.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    npm install
+  displayName: 'Install Dependencies'
+
+- script: |
+    npm install -g @angular/cli
+  displayName: 'Install Angular CLI'
+
+- script: |
+    ng build --configuration production
+  displayName: 'Build Angular Application'
+
+- task: AzureCLI@2
+  displayName: 'Upload Files to Static Website'
+  inputs:
+    azureSubscription: 'Azure-StaticWebsite-SC'
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az storage blob upload-batch \
+        --account-name angularwebstorage001 \
+        --destination '$web' \
+        --source dist/hello-world-app/browser \
+        --overwrite
