@@ -1,11 +1,14 @@
 trigger: none
 
+resources:
+  pipelines:
+  - pipeline: angularBuild
+    source: kalyani-git-cloud.Angular-static-website
+
 stages:
 
+# DEV
 - stage: DEV
-  variables:
-    storageAccount: angulardevstorage001
-
   jobs:
   - deployment: DeployDev
     environment: dev
@@ -15,11 +18,22 @@ stages:
         deploy:
           steps:
 
-          - script: |
-              echo "Deploying to DEV"
-              echo "$(storageAccount)"
-            displayName: 'Test DEV'
+          - download: angularBuild
+            artifact: AngularBuild
 
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Azure-StaticWebsite-SC'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az storage blob upload-batch \
+                  --account-name angulardevstorage001 \
+                  --destination '$web' \
+                  --source "$(Pipeline.Workspace)/angularBuild/AngularBuild" \
+                  --overwrite
+
+# TEST
 - stage: TEST
   dependsOn: DEV
 
@@ -32,8 +46,22 @@ stages:
         deploy:
           steps:
 
-          - script: echo "Deploying to TEST"
+          - download: angularBuild
+            artifact: AngularBuild
 
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Azure-StaticWebsite-SC'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az storage blob upload-batch \
+                  --account-name angularteststorage001 \
+                  --destination '$web' \
+                  --source "$(Pipeline.Workspace)/angularBuild/AngularBuild" \
+                  --overwrite
+
+# STAGE
 - stage: STAGE
   dependsOn: TEST
 
@@ -46,8 +74,22 @@ stages:
         deploy:
           steps:
 
-          - script: echo "Deploying to STAGE"
+          - download: angularBuild
+            artifact: AngularBuild
 
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Azure-StaticWebsite-SC'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az storage blob upload-batch \
+                  --account-name angularstagestorage001 \
+                  --destination '$web' \
+                  --source "$(Pipeline.Workspace)/angularBuild/AngularBuild" \
+                  --overwrite
+
+# PROD
 - stage: PROD
   dependsOn: STAGE
 
@@ -60,4 +102,17 @@ stages:
         deploy:
           steps:
 
-          - script: echo "Deploying to PROD"
+          - download: angularBuild
+            artifact: AngularBuild
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Azure-StaticWebsite-SC'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az storage blob upload-batch \
+                  --account-name angularprodstorage001 \
+                  --destination '$web' \
+                  --source "$(Pipeline.Workspace)/angularBuild/AngularBuild" \
+                  --overwrite
